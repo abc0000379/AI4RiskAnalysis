@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAZOP 知识图谱链接预测 · 技术路线</title>
+<style>
+  :root{
+    --bg0:#070b16; --glass:rgba(255,255,255,.045); --glass2:rgba(255,255,255,.07);
+    --line:rgba(255,255,255,.10); --line2:rgba(255,255,255,.18);
+    --txt:#e8edf7; --txt2:#9fb0c8; --txt3:#6b7c97;
+    --c1:#38e1c6; --c2:#a07cff; --c3:#ffb84d; --c4:#3ddc84; --dev:#ff6b8b;
+    --c1g:linear-gradient(135deg,#38e1c6,#2aa6ff); --c2g:linear-gradient(135deg,#a07cff,#6a5cff);
+    --c3g:linear-gradient(135deg,#ffb84d,#ff7a45); --c4g:linear-gradient(135deg,#3ddc84,#22b8a6);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:var(--bg0); color:var(--txt); line-height:1.6; overflow-x:hidden;
+    background-image:
+      radial-gradient(900px 500px at 12% -8%, rgba(56,225,198,.13), transparent 60%),
+      radial-gradient(800px 520px at 92% 4%, rgba(160,124,255,.14), transparent 60%),
+      radial-gradient(900px 600px at 50% 108%, rgba(61,220,132,.08), transparent 60%);
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+  .glass{background:var(--glass);border:1px solid var(--line);border-radius:18px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 12px 40px rgba(0,0,0,.34)}
+
+  header{padding:60px 0 22px;text-align:center}
+  .tag{display:inline-block;font-size:12.5px;letter-spacing:.16em;color:var(--c1);
+    border:1px solid rgba(56,225,198,.34);border-radius:999px;padding:5px 15px;margin-bottom:20px;background:rgba(56,225,198,.07)}
+  h1{font-size:clamp(28px,4.4vw,46px);font-weight:800;line-height:1.18}
+  h1 .grad{background:linear-gradient(100deg,#38e1c6,#a07cff 55%,#ffb84d);-webkit-background-clip:text;background-clip:text;color:transparent}
+  header p{color:var(--txt2);max-width:700px;margin:16px auto 0;font-size:16px}
+  .cta{margin-top:26px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{cursor:pointer;border:none;font-family:inherit;font-size:14.5px;font-weight:600;color:#06121a;
+    background:var(--c1g);padding:12px 22px;border-radius:12px;transition:.25s;box-shadow:0 8px 24px rgba(56,225,198,.28)}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(56,225,198,.42)}
+  .btn.ghost{background:var(--glass2);color:var(--txt);border:1px solid var(--line2);box-shadow:none}
+  .btn.ghost:hover{background:rgba(255,255,255,.12)}
+
+  section{padding:28px 0}
+  .sec-h{font-size:13px;letter-spacing:.18em;color:var(--txt3);text-transform:uppercase;margin-bottom:18px;text-align:center}
+  .pipe{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:relative}
+  .stage{cursor:pointer;padding:20px 18px;position:relative;transition:.3s;overflow:hidden}
+  .stage:hover{transform:translateY(-4px);border-color:var(--line2)}
+  .stage.active::before{content:"";position:absolute;inset:0;border-radius:18px;padding:1.5px;background:var(--g);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+  .stage .num{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:17px;color:#06121a;background:var(--g);margin-bottom:13px;box-shadow:0 6px 16px rgba(0,0,0,.3)}
+  .stage h3{font-size:16px;font-weight:700;margin-bottom:5px}
+  .stage p{font-size:12.8px;color:var(--txt2)}
+  .stage .glow{position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:var(--g);filter:blur(46px);opacity:.16;transition:.3s}
+  .stage.active .glow{opacity:.34}
+  @media(min-width:760px){.pipe::after{content:"";position:absolute;top:38px;left:12%;right:12%;height:2px;z-index:-1;
+    background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3),var(--c4));opacity:.25}}
+
+  .exrow{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:6px 0 22px}
+  .chip{cursor:pointer;font-size:13.5px;font-weight:600;color:var(--txt2);padding:9px 16px;border-radius:11px;background:var(--glass);border:1px solid var(--line);transition:.22s}
+  .chip:hover{color:var(--txt);border-color:var(--line2)}
+  .chip.on{color:#06121a;background:linear-gradient(135deg,#fff,#cfe);border-color:transparent}
+  .chip .k{font-size:11px;opacity:.7;margin-right:6px}
+
+  .viewer{padding:0;overflow:hidden}
+  .vhead{display:flex;align-items:center;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line)}
+  .vhead .vnum{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#06121a;background:var(--g)}
+  .vhead h3{font-size:17px}
+  .vhead .vsub{color:var(--txt2);font-size:13px;margin-left:auto;text-align:right}
+  .vbody{padding:22px;min-height:470px}
+  .step-dots{display:flex;gap:8px;margin-left:14px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--line2);transition:.3s;cursor:pointer}
+  .dot.on{background:var(--c1);box-shadow:0 0 10px var(--c1);transform:scale(1.25)}
+  .note{font-size:12.8px;color:var(--txt3);margin-top:16px;padding-left:12px;border-left:2px solid var(--line2)}
+  .note b{color:var(--txt2)}
+
+  /* stage1 data sources */
+  .srcgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;animation:fade .5s}
+  .src{padding:17px 16px;border-radius:14px;background:rgba(0,0,0,.2);border:1px solid var(--line);transition:.25s;cursor:default}
+  .src:hover{border-color:var(--line2);transform:translateY(-3px);background:rgba(255,255,255,.03)}
+  .src .ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:var(--sg)}
+  .src .ico svg{width:20px;height:20px;display:block}
+  .src h4{font-size:15px;font-weight:700}
+  .src .kind{font-size:11.5px;color:var(--txt3);margin:2px 0 11px}
+  .src .fields{display:flex;flex-wrap:wrap;gap:5px}
+  .src .fields span{font-size:11px;color:var(--txt2);background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:6px;padding:3px 8px}
+  .divbar{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;justify-content:center}
+  .divbar div{font-size:12.5px;color:var(--txt2);background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:8px 14px}
+  .divbar b{color:var(--c1)}
+
+  /* graph */
+  .g2{display:grid;grid-template-columns:1fr 290px;gap:16px;animation:fade .5s}
+  @media(max-width:840px){.g2{grid-template-columns:1fr}}
+  svg.kg{width:100%;height:430px;display:block;background:rgba(0,0,0,.14);border-radius:14px;border:1px solid var(--line)}
+  .kg .edge{stroke:var(--line2);stroke-width:1.6;fill:none}
+  .kg .edge.ctx{stroke-dasharray:3 4;opacity:.4}
+  .kg .elabel{fill:var(--txt3);font-size:10px}
+  .node{cursor:pointer}
+  .node rect{transition:.2s}
+  .node.sel rect{stroke-width:2.4}
+  .node.ctx{opacity:.5}
+  .node .nl{font-size:11px;font-weight:600;fill:var(--txt)}
+  .attrcard{padding:16px;height:100%}
+  .attrcard .ah{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+  .attrcard .ah .badge{font-size:10.5px;padding:2px 8px;border-radius:6px;color:#06121a}
+  .attrcard .an{font-size:14.5px;font-weight:700}
+  .attrcard .atype{font-size:11.5px;color:var(--txt3);margin-bottom:12px}
+  .attrcard .arow{display:flex;justify-content:space-between;gap:10px;font-size:12.6px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .attrcard .arow .k{color:var(--txt3);white-space:nowrap}
+  .attrcard .arow .v{color:var(--txt);text-align:right;font-weight:500}
+  .attrcard .hint{font-size:11.5px;color:var(--txt3);margin-top:11px}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--txt2);margin-top:12px;padding:0 4px}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+
+  /* stage3 path flow */
+  .pflow{display:flex;align-items:stretch;flex-wrap:wrap;gap:0;animation:fade .5s;padding:6px 0}
+  .pnode{flex:0 0 auto;max-width:200px;padding:13px 15px;border-radius:14px;background:rgba(13,20,34,.92);
+    border:2px solid var(--pc);position:relative;box-shadow:0 0 0 4px rgba(255,184,77,.08),0 8px 22px rgba(0,0,0,.35)}
+  .pnode .pt{font-size:10.5px;font-weight:700;letter-spacing:.05em;margin-bottom:3px;color:var(--pc)}
+  .pnode .pname{font-size:13.5px;font-weight:700;line-height:1.35;word-break:break-word}
+  .pconn{flex:0 0 auto;align-self:center;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-width:66px;padding:0 4px;position:relative}
+  .pconn .rl{font-size:11px;color:var(--c3);font-weight:600;margin-bottom:3px;white-space:nowrap}
+  .pconn .ln{width:100%;height:4px;border-radius:3px;background:linear-gradient(90deg,#ffb84d,#ff7a45);
+    box-shadow:0 0 10px rgba(255,184,77,.6);position:relative;overflow:hidden}
+  .pconn .ln::after{content:"";position:absolute;top:0;left:-40%;width:40%;height:100%;background:rgba(255,255,255,.85);
+    animation:slide 1.4s linear infinite;border-radius:3px}
+  .pathbar{margin-top:18px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--txt2);
+    background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:11px;padding:14px 16px;overflow-x:auto;white-space:nowrap}
+  .pathbar .ent{color:var(--c3);font-weight:700}
+  .pathbar .rel{color:var(--c2)}
+  .tailcard{margin-top:14px;background:rgba(255,184,77,.07);border:1px solid rgba(255,184,77,.26);border-radius:12px;padding:13px 15px;font-size:13px;color:var(--txt2)}
+  .tailcard b{color:var(--c3)}
+
+  /* stage4 tech routes + gen */
+  .routes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;animation:fade .5s}
+  @media(max-width:840px){.routes{grid-template-columns:1fr}}
+  .route{padding:16px;border-radius:14px;background:rgba(0,0,0,.2);border:1px solid var(--line)}
+  .route h4{font-size:13.5px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .route h4 .d{width:9px;height:9px;border-radius:3px}
+  .rsteps{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+  .rstep{font-size:11.8px;color:var(--txt);background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:8px;padding:6px 10px}
+  .rsteps .sep{color:var(--txt3);font-size:13px}
+  .rnote{font-size:11.5px;color:var(--txt3);margin-top:10px}
+  .llm{display:grid;grid-template-columns:1fr 50px 1fr;gap:8px;align-items:center}
+  @media(max-width:840px){.llm{grid-template-columns:1fr;gap:14px}.llm .arrow{transform:rotate(90deg);justify-self:center}}
+  .panel{background:rgba(0,0,0,.22);border:1px solid var(--line);border-radius:13px;padding:15px}
+  .panel h5{font-size:12px;letter-spacing:.08em;color:var(--txt3);text-transform:uppercase;margin-bottom:11px}
+  .ipart{font-size:12.5px;margin-bottom:9px;padding-left:11px;border-left:2px solid var(--line2)}
+  .ipart b{color:var(--c1);font-weight:600;display:block;font-size:11.5px;margin-bottom:1px}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--c4);font-size:24px}
+  .tasktabs{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+  .ttab{cursor:pointer;font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:9px;background:var(--glass);border:1px solid var(--line);color:var(--txt2);transition:.2s}
+  .ttab.on{background:var(--c4g);color:#06121a;border-color:transparent}
+  .out{font-size:13.6px;line-height:1.7;animation:fade .4s}
+  .out .badge{display:inline-block;font-size:11px;color:var(--c4);border:1px solid rgba(61,220,132,.4);background:rgba(61,220,132,.08);border-radius:7px;padding:2px 9px;margin-bottom:9px}
+
+  /* metrics */
+  .mtop{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  @media(max-width:620px){.mtop{grid-template-columns:1fr}}
+  .metric{padding:24px 18px;text-align:center}
+  .metric .v{font-size:34px;font-weight:800}
+  .metric.a .v{background:var(--c1g);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .metric.b .v{background:var(--c2g);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .metric .l{font-size:13px;color:var(--txt2);margin-top:7px}
+  .scorewrap{padding:22px}
+  .scoretitle{font-size:13px;letter-spacing:.05em;color:var(--txt2);margin-bottom:18px;text-align:center}
+  .scoretitle b{color:var(--c3)}
+  .score{margin-bottom:16px}
+  .score:last-child{margin-bottom:0}
+  .score .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+  .score .nm{font-size:14px;font-weight:600}
+  .score .val{font-size:20px;font-weight:800;background:var(--c3g);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .score .val small{font-size:12px;color:var(--txt3);-webkit-text-fill-color:var(--txt3)}
+  .bar{height:11px;border-radius:7px;background:rgba(255,255,255,.07);overflow:hidden;position:relative}
+  .bar .fill{height:100%;width:0;border-radius:7px;background:var(--c3g);transition:width 1.3s cubic-bezier(.2,.7,.2,1);box-shadow:0 0 12px rgba(255,184,77,.5)}
+  .bar .ticks{position:absolute;inset:0;display:flex}
+  .bar .ticks span{flex:1;border-right:1px solid rgba(255,255,255,.08)}
+  .bar .ticks span:last-child{border:none}
+
+  footer{padding:36px 0 56px;text-align:center;color:var(--txt3);font-size:13px}
+  .stack{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0}
+  .stack span{font-size:12px;color:var(--txt2);background:var(--glass);border:1px solid var(--line);border-radius:9px;padding:6px 13px}
+  .reveal{opacity:0;transform:translateY(22px);transition:.7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  @keyframes slide{to{left:120%}}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>从多源工艺设计数据到<span class="grad">智能 HAZOP 分析</span><br>知识图谱增强大语言模型驱动的技术路线</h1>
+    <p>以设备表、管道表、仪表规格书、P&amp;ID 等基础设计数据为输入，构建工艺知识图谱、抽取关键推理路径，最终由微调大模型生成结构化风险分析结论。</p>
+    <div class="cta">
+      <button class="btn" id="runDemo">▶ 运行端到端示例</button>
+      <button class="btn ghost" id="toMetrics">查看效果指标</button>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="sec-h">四阶段技术路线</div>
+    <div class="pipe" id="pipe"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="exrow" id="exrow"></div>
+    <div class="glass viewer reveal">
+      <div class="vhead">
+        <div class="vnum" id="vnum">1</div>
+        <h3 id="vtitle"></h3>
+        <div class="step-dots" id="dots"></div>
+        <div class="vsub" id="vsub"></div>
+      </div>
+      <div class="vbody" id="vbody"></div>
+    </div>
+  </div>
+</section>
+
+<section id="metricsSec">
+  <div class="wrap">
+    <div class="sec-h">方案效果</div>
+    <div class="reveal" id="metrics"></div>
+  </div>
+</section>
+
+<script>
+/* ============================ 阶段 ============================ */
+const STAGES=[
+  {n:1,title:"原始设计数据输入",sub:"多源异构基础数据",g:"var(--c1g)",col:"--c1",desc:"设备表·管道表·仪表规格书·P&ID 等设计资料"},
+  {n:2,title:"知识图谱构建",sub:"实体·关系·属性",g:"var(--c2g)",col:"--c2",desc:"抽取设备/位号/介质等节点，并挂载设计属性"},
+  {n:3,title:"关键路径提取",sub:"NBFNet 推理路径",g:"var(--c3g)",col:"--c3",desc:"为偏离预测因果路径，定位目标位号"},
+  {n:4,title:"HAZOP 报告生成",sub:"检索增强 + 微调大模型",g:"var(--c4g)",col:"--c4",desc:"相似案例检索 + LoRA 微调生成结论"},
+];
+
+/* ---- stage1 多源设计数据（全局） ---- */
+const IC={
+  table:'<svg viewBox="0 0 24 24" fill="none" stroke="#06121a" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg>',
+  pipe:'<svg viewBox="0 0 24 24" fill="none" stroke="#06121a" stroke-width="2"><rect x="2" y="9" width="20" height="6" rx="1"/><path d="M7 9V5.5M7 18.5V15M17 9V5.5M17 18.5V15"/></svg>',
+  gauge:'<svg viewBox="0 0 24 24" fill="none" stroke="#06121a" stroke-width="2"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-5"/><circle cx="12" cy="18" r="1.6" fill="#06121a" stroke="none"/></svg>',
+  diagram:'<svg viewBox="0 0 24 24" fill="none" stroke="#06121a" stroke-width="2"><circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.4 6.6 15.6 6.6M7.2 8.2 11 15.4M16.8 8.2 13 15.4"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="#06121a" stroke-width="2"><path d="M4 4v16h16"/><rect x="7" y="12" width="3" height="5" fill="#06121a" stroke="none"/><rect x="12" y="9" width="3" height="8" fill="#06121a" stroke="none"/><rect x="17" y="6" width="3" height="11" fill="#06121a" stroke="none"/></svg>',
+};
+const SOURCES=[
+  {ico:IC.table,g:"var(--c1g)",name:"设备表",kind:"结构化表格",fields:["设备位号","设备名称","设备类型","材质","设计温度/压力","直径·切线高","容积","分段信息"]},
+  {ico:IC.pipe,g:"var(--c2g)",name:"管道表",kind:"结构化表格",fields:["管线号","输送介质","公称直径 DN","管道材质","操作温度/压力","管道等级","保温/伴热"]},
+  {ico:IC.gauge,g:"var(--c3g)",name:"仪表规格书",kind:"半结构化文档",fields:["仪表位号","仪表类型","测量参数","量程","联锁/报警值","所在管线","SIS 回路"]},
+  {ico:IC.diagram,g:"var(--c4g)",name:"P&ID 图纸",kind:"图形 / 拓扑",fields:["设备—管线连接","仪表—管线挂接","阀门/联锁逻辑","物流走向"]},
+  {ico:IC.chart,g:"var(--c1g)",name:"工艺数据表",kind:"结构化表格",fields:["物流编号","组分/相态","流量","操作温度·压力","设计工况"]},
+];
+
+/* ============================ 示例 ============================ */
+const NT={dev:{c:"#ff6b8b",n:"偏离"},inst:{c:"#38e1c6",n:"仪表/阀"},pipe:{c:"#22b8a6",n:"管线"},
+  tower:{c:"#a07cff",n:"塔器"},vessel:{c:"#7c8cff",n:"容器/罐"},hx:{c:"#b07cff",n:"换热器"},
+  type:{c:"#ffb84d",n:"偏差类型"},seg:{c:"#ff8a3d",n:"段"},med:{c:"#3ddc84",n:"介质"}};
+
+const EX=[
+{
+  id:"valve",k:"阀门",label:"煤线切断阀故障",dev:"1#煤线53XZV1102故障关闭",
+  intent:"来自粉煤给料罐的粉煤通过粉煤加料器由高压氮气送入粉煤烧嘴。",
+  nodes:[
+    {id:"dev",label:"1#煤线53XZV1102故障关闭",type:"dev",x:.14,y:.5,attrs:{"节点类型":"偏离","偏差类型":"故障关","关联任务":"原因/后果/保护措施"}},
+    {id:"v1103",label:"53XZV-1103",type:"inst",x:.46,y:.5,attrs:{"仪表类型":"开关阀(SIS)","用途":"去X5304A1粉煤开关阀","所在管线":"粉煤给料线","联锁":"煤线密度低联锁","信号":"DI / DO"}},
+    {id:"cpa",label:"53CPA1152",type:"pipe",x:.8,y:.34,attrs:{"节点类型":"管线","介质名称":"粉煤给料线","公称直径":"DN65","介质状态":"Vapor / Solid"}},
+    {id:"v1102",label:"53XZV-1102",type:"inst",x:.46,y:.84,attrs:{"仪表类型":"切换阀","用途":"去烧嘴粉煤切换阀","所在管线":"粉煤给料线"}},
+    {id:"typ",label:"故障关",type:"type",x:.14,y:.16,attrs:{"偏差类型":"阀门动作类","方向":"关 / 切断"}},
+    {id:"cx1",label:"53FV-1101",type:"inst",x:.78,y:.74,ctx:true},
+    {id:"cx2",label:"粉煤给料罐",type:"vessel",x:.5,y:.5,ctx:true,hidden:true},
+    {id:"cx3",label:"2#煤线53XZV1202故障关闭",type:"dev",x:.84,y:.92,ctx:true},
+  ],
+  edges:[{f:"dev",t:"v1103",r:"关联"},{f:"cpa",t:"v1103",r:"配有仪表"},{f:"dev",t:"typ",r:"偏差类型"},
+    {f:"dev",t:"v1102",r:"关联"},{f:"v1103",t:"cx1",r:"同管线",ctx:true},{f:"cx3",t:"cx1",r:"关联",ctx:true}],
+  path:["dev","v1103","cpa"],
+  pathStr:"(1#煤线53XZV1102故障关闭) —[关联]→ (53XZV-1103) ←[配有仪表]— (53CPA1152)",
+  tail:"53XZV-1103 · 53CPA1152（粉煤给料线）",
+  tasks:{"原因":"53XZV1102自身故障",
+    "后果":"引起气化炉过氧，气化炉超温，烧嘴及其他气化炉部件损坏，装置停车",
+    "保护措施":"1、53TIAHH1019 气化炉出口合成气温度高高报警，人员干预；2、53DIZL1102（1oo1）煤线密度低联锁，切断对应煤线及氧调节阀（关闭 53XZV1102 / 53XZV1103）"},
+  sim:{dev:"1#煤线53XZV1103故障关闭",why:"同煤线·相邻切断阀·同偏差类型（故障关）",concl:{
+    "原因":"53XZV1103自身故障",
+    "后果":"引起气化炉过氧，气化炉超温，烧嘴及其他气化炉部件损坏，装置停车",
+    "保护措施":"1、53TIAHH1019 气化炉出口合成气温度高高报警，人员干预；2、53DIZL1102（1oo1）煤线密度低联锁，切断对应煤线及氧调节阀（关闭 53XZV1102 / 53XZV1103）"}}
+},
+{
+  id:"tower",k:"塔器",label:"再吸收塔分段液位",dev:"再吸收塔C-2204Ⅳ段液位过高",
+  intent:"经冷处理的富 CO₂ 甲醇在再吸收塔（C-2204）分段闪蒸；CO₂ 产品气从塔上方离开后进入后冷器。",
+  nodes:[
+    {id:"dev",label:"再吸收塔C-2204Ⅳ段液位过高",type:"dev",x:.15,y:.5,attrs:{"节点类型":"偏离","偏差参数":"液位","偏差方向":"过高","段限定":"Ⅳ段"}},
+    {id:"c2204",label:"1201-C-2204",type:"tower",x:.52,y:.5,attrs:{"设备名称":"再吸收塔","设备类型":"塔器","直径":"Φ3600 mm","切线高":"≈61650 mm","材质":"Q245R","设计压力":"0.6 MPa","设计温度":"10 / 130 ℃","塔型":"浮阀 / 填料塔","分段":"CO产品段·再吸收段·汽提段顶部·汽提段底部"}},
+    {id:"seg",label:"Ⅳ段＝汽提段底部",type:"seg",x:.52,y:.15,attrs:{"段编号":"Ⅳ段","设备表解析":"汽提段底部","塔板数":"15","操作温度":"-39.5~-34.9 ℃","操作压力":"0.120~0.135 MPa"}},
+    {id:"typ",label:"液位过高",type:"type",x:.52,y:.86,attrs:{"偏差类型":"偏差参数(液位)+偏差方向(过高)"}},
+    {id:"med",label:"富CO₂甲醇",type:"med",x:.84,y:.4,attrs:{"介质名称":"富 CO₂ 甲醇","来源":"闪蒸甲醇冷却器 E-2210"}},
+    {id:"cx1",label:"1201-C-2203",type:"tower",x:.84,y:.8,ctx:true},
+    {id:"cx2",label:"再吸收塔C-2204Ⅰ段液位过高",type:"dev",x:.16,y:.9,ctx:true},
+  ],
+  edges:[{f:"dev",t:"c2204",r:"与…有关"},{f:"c2204",t:"seg",r:"含段"},{f:"dev",t:"typ",r:"偏差类型"},
+    {f:"c2204",t:"med",r:"介质为"},{f:"c2204",t:"cx1",r:"产品气混合",ctx:true},{f:"cx2",t:"c2204",r:"与…有关",ctx:true}],
+  path:["dev","c2204"],
+  pathStr:"(再吸收塔C-2204Ⅳ段液位过高) —[与…有关]→ (1201-C-2204)  ·  段约束：Ⅳ段＝汽提段底部",
+  tail:"1201-C-2204 · 汽提段底部（Ⅳ段）",
+  tasks:{"后果":"1、再吸收塔 Ⅳ段液位升高，塔盘淹塔，甲醇逆流至低低压氮气管线，污染氮气系统（工艺安全事件）"},
+  sim:{dev:"再吸收塔C-2204Ⅳ段液位过高（另一单元）",why:"同塔·同段（Ⅳ段＝汽提段底部）·同类型 — 严禁配 Ⅰ/Ⅲ段",
+    concl:{"后果":"塔盘淹塔，甲醇逆流至低低压氮气管线，污染氮气系统"}}
+},
+{
+  id:"flow",k:"流量",label:"分馏塔废水流量",dev:"进甲醇/水分馏塔C-2206废水流量过低或无流量",
+  intent:"来自热再生塔的甲醇经进料泵 P-2208A/B 抽出、过滤后进入甲醇/水分离塔 C-2206；塔釜液经再沸器 E-2216 加热再沸。",
+  nodes:[
+    {id:"dev",label:"进甲醇/水分馏塔C-2206废水流量过低或无流量",type:"dev",x:.13,y:.52,attrs:{"节点类型":"偏离","偏差参数":"流量","偏差方向":"过低 / 无"}},
+    {id:"ww",label:"1201-WW-007",type:"pipe",x:.36,y:.5,attrs:{"节点类型":"管线","介质":"外排废水","流向":"塔釜 → 界区外"}},
+    {id:"e2217",label:"1201-E-2217",type:"hx",x:.54,y:.74,attrs:{"设备名称":"废水冷却器","设备类型":"换热器","换热介质":"废水 / 循环水"}},
+    {id:"c2206",label:"1201-C-2206",type:"tower",x:.64,y:.26,attrs:{"设备名称":"甲醇/水分馏塔","设备类型":"塔器","再沸器":"E-2216","设计温度":"146 ℃(塔釜)"}},
+    {id:"v2201",label:"1201-V-2201",type:"vessel",x:.82,y:.6,attrs:{"设备类型":"容器/罐"}},
+    {id:"c2205",label:"1201-C-2205",type:"tower",x:.92,y:.3,attrs:{"设备名称":"热再生塔","设备类型":"塔器"}},
+    {id:"cx1",label:"尾气吸收塔",type:"tower",x:.5,y:.95,ctx:true},
+  ],
+  edges:[{f:"dev",t:"ww",r:"与…有关"},{f:"ww",t:"e2217",r:"管道流出为"},{f:"c2206",t:"e2217",r:"影响"},
+    {f:"v2201",t:"c2206",r:"影响"},{f:"v2201",t:"c2205",r:"影响"},{f:"e2217",t:"cx1",r:"下游",ctx:true}],
+  path:["dev","ww","e2217","c2206","c2205"],
+  pathStr:"(…废水流量过低/无) —[与…有关]→ (WW-007) —[管道流出为]→ (E-2217) ←[影响]— (C-2206) ⋯ (C-2205)",
+  tail:"E-2217 · C-2206 · C-2205（多跳因果链）",
+  tasks:{"后果":"1、甲醇/水分馏塔液位降低，塔釜外排废水温度升高，废水冷却器可能泄漏，废水泄漏至现场，环境污染；2、尾气吸收塔液位升高"},
+  sim:{dev:"进甲醇/水分馏塔C-2206甲醇水流量过低或无流量",why:"同塔·同类型(流量过低)·设备相近 — 宽松强制命中",
+    concl:{"后果":"分馏塔液位降低，废水温度升高，废水冷却器可能泄漏，环境污染"}}
+},
+];
+
+const METRIC_UNITS=12, METRIC_TRIPLES=869481;
+const SCORES=[{nm:"原因推导",v:3.823},{nm:"后果推演",v:3.35},{nm:"保护措施推演",v:3.732}];
+
+/* ============================ 状态 ============================ */
+let curStage=1,curEx=0,curTask=null,featNode=null,demoTimer=null;
+
+const pipe=document.getElementById('pipe');
+STAGES.forEach(s=>{const d=document.createElement('div');d.className='glass stage';d.dataset.n=s.n;d.style.setProperty('--g',s.g);
+  d.innerHTML=`<div class="glow"></div><div class="num">${s.n}</div><h3>${s.title}</h3><p>${s.desc}</p>`;
+  d.onclick=()=>{stopDemo();setStage(s.n);scrollToViewer();};pipe.appendChild(d);});
+
+const exrow=document.getElementById('exrow');
+EX.forEach((e,i)=>{const c=document.createElement('div');c.className='chip';c.innerHTML=`<span class="k">${e.k}</span>${e.label}`;
+  c.onclick=()=>{stopDemo();curEx=i;curTask=null;featNode=null;render();};exrow.appendChild(c);});
+function syncChips(){[...exrow.children].forEach((c,i)=>c.classList.toggle('on',i===curEx));}
+
+const vnum=document.getElementById('vnum'),vtitle=document.getElementById('vtitle'),vsub=document.getElementById('vsub'),
+  vbody=document.getElementById('vbody'),dotsEl=document.getElementById('dots');
+
+function setStage(n){curStage=n;render();}
+function render(){
+  const s=STAGES[curStage-1],e=EX[curEx];
+  [...pipe.children].forEach(c=>c.classList.toggle('active',+c.dataset.n===curStage));
+  syncChips();
+  vnum.style.setProperty('--g',s.g);vnum.textContent=s.n;vtitle.textContent=s.title;
+  vsub.innerHTML=curStage===1?`<b style="color:${css(s.col)}">${s.sub}</b>`
+    :`<b style="color:${css(s.col)}">${s.sub}</b><br><span style="font-size:12px;color:var(--txt3)">示例：${e.dev}</span>`;
+  dotsEl.innerHTML=STAGES.map(x=>`<div class="dot ${x.n===curStage?'on':''}" data-n="${x.n}"></div>`).join('');
+  [...dotsEl.children].forEach(d=>d.onclick=()=>{stopDemo();setStage(+d.dataset.n);});
+  if(curStage===1)renderSources();
+  else if(curStage===2)renderGraph(e);
+  else if(curStage===3)renderPath(e);
+  else renderLLM(e);
+}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+/* ---- stage1 ---- */
+function renderSources(){
+  const cards=SOURCES.map(s=>`<div class="src" style="--sg:${s.g}">
+    <div class="ico">${s.ico}</div><h4>${s.name}</h4><div class="kind">${s.kind}</div>
+    <div class="fields">${s.fields.map(f=>`<span>${f}</span>`).join('')}</div></div>`).join('');
+  vbody.innerHTML=`<div class="srcgrid">${cards}</div>
+    <div class="divbar">
+      <div>数据源类型 <b>5+</b> 类</div><div>形态 <b>表格 / 文档 / 图纸</b> 多源异构</div>
+      <div>字段 <b>数十项</b>·跨表跨图交叉引用</div><div>统一抽取入 <b>知识图谱</b></div></div>
+    <div class="note">输入为装置的<b>基础设计数据</b>：设备/管道/仪表台账、规格书与 P&ID 图纸等。
+    这些资料<b>来源多样、格式各异、相互交叉引用</b>，是后续自动建图与推理的事实底座。</div>`;
+}
+
+/* ---- stage2 网络图 + 属性面板 ---- */
+function lineW(s){let w=0;for(const c of s)w+=/[一-鿿（）／·]/.test(c)?12.5:(/[A-Za-z0-9]/.test(c)?7.4:5);return w;}
+function wrapLabel(s,maxw){const out=[];let cur='',cw=0;for(const c of s){const w=lineW(c);
+  if(cw+w>maxw&&cur){out.push(cur);cur=c;cw=w;}else{cur+=c;cw+=w;}}if(cur)out.push(cur);return out;}
+function renderGraph(e){
+  if(!featNode||!e.nodes.find(n=>n.id===featNode)){
+    const rich=t=>e.nodes.find(n=>!n.ctx&&t.includes(n.type)&&n.attrs&&Object.keys(n.attrs).length>=3);
+    const pick=rich(['tower','vessel','hx'])||rich(['inst','pipe'])||e.nodes.find(n=>!n.ctx&&n.attrs)||e.nodes[1];
+    featNode=pick.id;
+  }
+  const W=860,H=430,padX=70,padY=42,vis=e.nodes.filter(n=>!n.hidden);
+  const X=x=>padX+x*(W-2*padX),Y=y=>padY+y*(H-2*padY);
+  const byId={};e.nodes.forEach(n=>byId[n.id]=n);
+  const edges=e.edges.filter(ed=>!byId[ed.f].hidden&&!byId[ed.t].hidden).map(ed=>{
+    const a=byId[ed.f],b=byId[ed.t],x1=X(a.x),y1=Y(a.y),x2=X(b.x),y2=Y(b.y),mx=(x1+x2)/2,my=(y1+y2)/2-22;
+    return `<path class="edge ${ed.ctx?'ctx':''}" d="M${x1},${y1} Q${mx},${my} ${x2},${y2}" marker-end="url(#ar)"/>
+      <text class="elabel" x="${mx}" y="${my+13}" text-anchor="middle">${ed.r}</text>`;}).join('');
+  const nodes=vis.map(n=>{
+    const x=X(n.x),y=Y(n.y),col=NT[n.type].c,lines=wrapLabel(n.label,n.ctx?92:108),
+      w=Math.max(58,Math.max(...lines.map(lineW))+20),h=lines.length*15+14,sel=n.id===featNode;
+    const tsp=lines.map((l,i)=>`<tspan x="${x}" y="${y-h/2+15+i*15}">${l}</tspan>`).join('');
+    return `<g class="node ${n.ctx?'ctx':''} ${sel?'sel':''}" data-id="${n.id}" transform="translate(0,0)">
+      <rect x="${x-w/2}" y="${y-h/2}" width="${w}" height="${h}" rx="9" fill="rgba(13,20,34,.94)" stroke="${col}" stroke-width="${n.type==='dev'?2:1.4}"/>
+      <circle cx="${x-w/2+11}" cy="${y-h/2+11}" r="3.5" fill="${col}"/>
+      <text class="nl" text-anchor="middle" fill="var(--txt)">${tsp}</text></g>`;}).join('');
+  const seen=new Set(),leg=vis.map(n=>NT[n.type]).filter(t=>!seen.has(t.n)&&seen.add(t.n))
+    .map(t=>`<span><i style="background:${t.c}"></i>${t.n}</span>`).join('');
+  vbody.innerHTML=`<div class="g2">
+    <div><svg class="kg" viewBox="0 0 ${W} ${H}"><defs>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="${css('--line2')}"/></marker></defs>
+      ${edges}${nodes}</svg><div class="legend">${leg}</div></div>
+    <div class="glass attrcard" id="attrcard"></div></div>
+    <div class="note">表格/图纸字段被解析为<b>偏离·位号·偏差类型·段·介质</b>等节点，并以<b>关联/配有仪表/含段/介质为</b>等关系相连。
+    虚线为图谱中<b>其它无关内容</b>（其它设备、其它偏离），示意全图规模——实际跨 12 单元、约 87 万三元组。<b>点击节点</b>查看其设计属性。</div>`;
+  drawAttr(e);
+  vbody.querySelectorAll('.node').forEach(g=>g.onclick=()=>{featNode=g.dataset.id;render();});
+}
+function drawAttr(e){
+  const n=e.nodes.find(x=>x.id===featNode),col=NT[n.type].c;
+  const rows=n.attrs?Object.entries(n.attrs).map(([k,v])=>`<div class="arow"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')
+    :`<div class="hint">该节点暂无展示属性。</div>`;
+  document.getElementById('attrcard').innerHTML=`
+    <div class="ah"><span class="badge" style="background:${col}">${NT[n.type].n}</span><span class="an">${n.label}</span></div>
+    <div class="atype">设备 / 节点设计属性</div>${rows}
+    <div class="hint">↑ 属性来自设备表/管道表/仪表规格书等数据源，随节点显式入图。</div>`;
+}
+
+/* ---- stage3 加粗路径流 ---- */
+function relBetween(e,a,b){const ed=e.edges.find(x=>(x.f===a&&x.t===b)||(x.f===b&&x.t===a));return ed?ed.r:"因果";}
+function renderPath(e){
+  const byId={};e.nodes.forEach(n=>byId[n.id]=n);
+  let html='';
+  e.path.forEach((id,i)=>{
+    const n=byId[id],col=NT[n.type].c;
+    html+=`<div class="pnode" style="--pc:${col}"><div class="pt">${NT[n.type].n}</div><div class="pname">${n.label}</div></div>`;
+    if(i<e.path.length-1)html+=`<div class="pconn"><div class="rl">${relBetween(e,id,e.path[i+1])}</div><div class="ln"></div></div>`;
+  });
+  vbody.innerHTML=`<div class="pflow">${html}</div>
+    <div class="pathbar">${colorPath(e.pathStr)}</div>
+    <div class="tailcard"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--c3)" stroke-width="2" style="vertical-align:-2px"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg> <b>关键路径尾实体</b>（客观目标位号）：<b>${e.tail}</b>。NBFNet 在图谱上为该偏离<b style="color:var(--c3)">预测/补全因果推理路径</b>；空路径样本由 KG 自动回填。</div>
+    <div class="note">路径以<b>加粗高亮</b>呈现，节点名称<b>完整无省略</b>。该路径连同实体属性一并写入下一步的大模型提示词，约束生成结论只能引用路径中出现的位号。</div>`;
+}
+function colorPath(s){return s.replace(/\(([^)]+)\)/g,'(<span class="ent">$1</span>)').replace(/\[([^\]]+)\]/g,'[<span class="rel">$1</span>]');}
+
+/* ---- stage4 检索算法 + 微调推理 + 生成 ---- */
+function renderLLM(e){
+  const tasks=Object.keys(e.tasks);if(!curTask||!e.tasks[curTask])curTask=tasks[0];
+  const tabs=tasks.map(t=>`<div class="ttab ${t===curTask?'on':''}" data-t="${t}">${t}</div>`).join('');
+  vbody.innerHTML=`
+  <div class="routes">
+    <div class="route"><h4><span class="d" style="background:var(--c2)"></span>相似案例检索算法</h4>
+      <div class="rsteps">
+        <span class="rstep">偏离名 BERT 句向量召回</span><span class="sep">→</span>
+        <span class="rstep">偏离类型一致</span><span class="sep">+</span>
+        <span class="rstep">关联设备相近<small>（宽松强制）</small></span><span class="sep">+</span>
+        <span class="rstep">塔同段约束</span><span class="sep">→</span>
+        <span class="rstep">全或无·同答案排除</span><span class="sep">→</span>
+        <span class="rstep" style="border-color:var(--c2)">Top-2 案例</span>
+      </div>
+      <div class="rnote">仅当类型一致且设备/段相近才入选；跨段错配修复 99.5%（1203→6）。</div></div>
+    <div class="route"><h4><span class="d" style="background:var(--c4)"></span>大模型微调 / 推理技术路线</h4>
+      <div class="rsteps">
+        <span class="rstep">DeepSeek-R1-Distill-Qwen-32B</span><span class="sep">→</span>
+        <span class="rstep">LoRA<small>（r8·α32·q/k/v）</small></span><span class="sep">→</span>
+        <span class="rstep">no-think 指令</span><span class="sep">+</span>
+        <span class="rstep">Tokenizer 修正</span><span class="sep">→</span>
+        <span class="rstep">单卡 sdpa·no-packing</span><span class="sep">→</span>
+        <span class="rstep" style="border-color:var(--c4)">vLLM / FP8 推理</span>
+      </div>
+      <div class="rnote">alpaca 三元组监督，3 epoch ≈ 10h；推理由小时级降至分钟级。</div></div>
+  </div>
+  ${tasks.length>1?`<div class="tasktabs">${tabs}</div>`:''}
+  <div class="llm">
+    <div class="panel"><h5>① 组装提示词（输入）</h5>
+      <div class="ipart"><b>指令 instruction</b>顶级 HAZOP 专家·直接输出${curTask}结论·禁止编造位号</div>
+      <div class="ipart"><b>待分析偏离</b>${e.dev}</div>
+      <div class="ipart"><b>节点设计意图</b>${e.intent}</div>
+      <div class="ipart"><b>知识图谱关键路径</b>${e.pathStr}</div>
+      <div class="ipart"><b>相似案例（同任务桶检索·in-context）</b>${e.sim.dev} ·【${curTask}】→ ${e.sim.concl[curTask]}</div></div>
+    <div class="arrow">➜</div>
+    <div class="panel"><h5>② 模型生成（输出）</h5>
+      <div class="out"><span class="badge">${curTask}结论</span><br>${e.tasks[curTask]}</div></div>
+  </div>
+  <div class="note">相似案例<b>只借鉴写法</b>，其位号不得搬用；模型仅依据<b>关键路径中的位号</b>给出结论。命中依据：${e.sim.why}。</div>`;
+  vbody.querySelectorAll('.ttab').forEach(t=>t.onclick=()=>{curTask=t.dataset.t;renderLLM(e);});
+}
+
+/* ============================ demo ============================ */
+function scrollToViewer(){document.querySelector('.viewer').scrollIntoView({behavior:'smooth',block:'center'});}
+function runDemo(){stopDemo();curStage=1;render();scrollToViewer();let n=1;
+  demoTimer=setInterval(()=>{n++;if(n>4){n=1;curEx=(curEx+1)%EX.length;curTask=null;featNode=null;}setStage(n);},2400);
+  document.getElementById('runDemo').textContent='■ 停止演示';}
+function stopDemo(){if(demoTimer){clearInterval(demoTimer);demoTimer=null;document.getElementById('runDemo').textContent='▶ 运行端到端示例';}}
+document.getElementById('runDemo').onclick=()=>{demoTimer?stopDemo():runDemo();};
+document.getElementById('toMetrics').onclick=()=>document.getElementById('metricsSec').scrollIntoView({behavior:'smooth'});
+
+/* ============================ metrics ============================ */
+document.getElementById('metrics').innerHTML=`
+  <div class="mtop">
+    <div class="glass metric a"><div class="v" data-to="${METRIC_UNITS}" data-suf=" 个">0</div><div class="l">装置单元数（气化 + 酸脱等工艺单元）</div></div>
+    <div class="glass metric b"><div class="v" data-to="${METRIC_TRIPLES}" data-suf="" data-comma="1">0</div><div class="l">知识图谱三元组数（实体·关系·属性）</div></div>
+  </div>
+  <div class="glass scorewrap">
+    <div class="scoretitle">专家评分结果 · <b>满分 5 分</b></div>
+    ${SCORES.map(s=>`<div class="score"><div class="top"><span class="nm">${s.nm}</span>
+      <span class="val" data-to="${s.v}">0.00<small> / 5</small></span></div>
+      <div class="bar"><div class="ticks"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="fill" data-w="${(s.v/5*100).toFixed(1)}"></div></div></div>`).join('')}
+  </div>`;
+function countUp(el){const to=+el.dataset.to,comma=el.dataset.comma,suf=el.dataset.suf||'',t0=performance.now(),dur=1400;
+  (function tick(t){let p=Math.min((t-t0)/dur,1);p=1-Math.pow(1-p,3);const cur=to*p;
+    el.textContent=(comma?Math.round(cur).toLocaleString():(to%1?cur.toFixed(2):Math.round(cur)))+suf;
+    if(p<1)requestAnimationFrame(tick);})(t0);}
+function scoreUp(el){const to=+el.dataset.to,t0=performance.now(),dur=1400;
+  (function tick(t){let p=Math.min((t-t0)/dur,1);p=1-Math.pow(1-p,3);el.innerHTML=(to*p).toFixed(3)+'<small> / 5</small>';
+    if(p<1)requestAnimationFrame(tick);})(t0);}
+
+const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');
+  if(en.target.id==='metrics'){en.target.querySelectorAll('.metric .v').forEach(countUp);
+    en.target.querySelectorAll('.score .val').forEach(scoreUp);
+    en.target.querySelectorAll('.fill').forEach(f=>setTimeout(()=>f.style.width=f.dataset.w+'%',120));}
+  io.unobserve(en.target);}}),{threshold:.18});
+document.querySelectorAll('.reveal').forEach(r=>io.observe(r));
+
+syncChips();render();
+</script>
+</body>
+</html>
